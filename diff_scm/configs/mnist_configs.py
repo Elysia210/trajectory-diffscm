@@ -16,7 +16,7 @@ def get_default_configs():
     os.environ["CUDA_VISIBLE_DEVICES"] = use_gpus
     # data
     config.data = data = ml_collections.ConfigDict()
-    data.path = Path("/remote/rds/groups/idcom_imaging/data/Brain/BRATS/") / config.dataset_name
+    data.path = Path("./data") / config.dataset_name
     experiment_path = r"../experiment_data/"
     ## Diffusion parameters
     config.diffusion = diffusion = ml_collections.ConfigDict()
@@ -74,7 +74,7 @@ def get_default_configs():
     training_score.ema_rate = "0.9999"  # comma-separated list of EMA values
     training_score.log_interval = 50
     training_score.save_interval = 1000
-    training_score.resume_checkpoint = ""
+    training_score.resume_checkpoint = "/home/ruimin/experiment_data/exp_02_MNIST/score_train/model014500.pt"
     training_score.use_fp16 = score_model.use_fp16
     training_score.fp16_scale_growth = 1e-3
     training_score.conditioning_variable = "y"

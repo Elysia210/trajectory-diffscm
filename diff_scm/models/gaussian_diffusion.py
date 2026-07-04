@@ -865,6 +865,12 @@ class GaussianDiffusion:
             }[self.model_mean_type]
             assert model_output.shape == target.shape == x_start.shape
             terms["mse"] = mean_flat((target - model_output) ** 2)
+            # Expose the predicted clean sample so training-side regularizers
+            # (e.g. an acceleration/smoothness penalty on the motion) can act on it.
+            if self.model_mean_type == ModelMeanType.EPSILON:
+                terms["pred_xstart"] = self._predict_xstart_from_eps(x_t, t, model_output)
+            elif self.model_mean_type == ModelMeanType.START_X:
+                terms["pred_xstart"] = model_output
             if "vb" in terms:
                 terms["loss"] = terms["mse"] + terms["vb"]
             else:

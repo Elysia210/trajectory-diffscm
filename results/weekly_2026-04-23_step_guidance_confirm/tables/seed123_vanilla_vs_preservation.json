@@ -1,0 +1,50 @@
+[
+  {
+    "mode": "unguided",
+    "num_samples": 32,
+    "prob_mean": 0.19320854311808944,
+    "prob_std": 0.1474934268229887,
+    "prob_min": 0.06959693133831024,
+    "prob_max": 0.6607471108436584,
+    "risk_gain_vs_self_ref": "",
+    "ego_step_mean": 1.1330968542024493,
+    "ego_step_max": 2.368059176951647,
+    "ego_endpoint_disp": 54.23502314090729,
+    "adv_step_mean": 0.6785078151151538,
+    "adv_step_max": 1.678373347967863,
+    "adv_endpoint_disp": 31.954047054052353,
+    "risk_gain_vs_unguided": 0.0
+  },
+  {
+    "mode": "vanilla_collision_s2.0",
+    "num_samples": 32,
+    "prob_mean": 0.2238748564850539,
+    "prob_std": 0.1735705978953541,
+    "prob_min": 0.06964927911758423,
+    "prob_max": 0.7431895732879639,
+    "risk_gain_vs_self_ref": "",
+    "ego_step_mean": 1.0660602590069175,
+    "ego_step_max": 2.309715826995671,
+    "ego_endpoint_disp": 50.58906714618206,
+    "adv_step_mean": 0.6960698463954031,
+    "adv_step_max": 1.6834816886112094,
+    "adv_endpoint_disp": 32.90296679735184,
+    "risk_gain_vs_unguided": 0.03066631336696446
+  },
+  {
+    "mode": "preservation_collision_s2.0",
+    "num_samples": 16,
+    "prob_mean": 0.26556331431493163,
+    "prob_std": 0.17770490980418732,
+    "prob_min": 0.08447370678186417,
+    "prob_max": 0.5521745681762695,
+    "risk_gain_vs_self_ref": 0.07715197885408998,
+    "ego_step_mean": 137710.40960383043,
+    "ego_step_max": 494984.0356481597,
+    "ego_endpoint_disp": 1595317.1715742946,
+    "adv_step_mean": 8456.31408400368,
+    "adv_step_max": 152733.05248512328,
+    "adv_endpoint_disp": 4203.322203412652,
+    "risk_gain_vs_unguided": 0.0723547711968422
+  }
+]

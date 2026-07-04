@@ -1,0 +1,74 @@
+[
+  {
+    "mode": "no_collision_s1.0",
+    "prob_mean": 0.1520886104553938,
+    "prob_min": 0.07604887336492538,
+    "prob_max": 0.43179333209991455,
+    "ego_step_mean": 1.3681972231715918,
+    "ego_step_max": 2.8844468258321285,
+    "ego_endpoint_disp": 65.95089161396027,
+    "adv_step_mean": 0.713607712648809,
+    "adv_step_max": 2.048599027097225,
+    "adv_endpoint_disp": 33.50902312994003
+  },
+  {
+    "mode": "unguided",
+    "prob_mean": 0.18841133546084166,
+    "prob_min": 0.07678790390491486,
+    "prob_max": 0.6608505249023438,
+    "ego_step_mean": 1.313605735078454,
+    "ego_step_max": 2.6628421302884817,
+    "ego_endpoint_disp": 63.061531126499176,
+    "adv_step_mean": 0.7201871937140822,
+    "adv_step_max": 1.950033351778984,
+    "adv_endpoint_disp": 34.00316169857979
+  },
+  {
+    "mode": "collision_s0.5",
+    "prob_mean": 0.19083597417920828,
+    "prob_min": 0.07717151939868927,
+    "prob_max": 0.6639437675476074,
+    "ego_step_mean": 1.2955347523093224,
+    "ego_step_max": 2.644213069230318,
+    "ego_endpoint_disp": 62.23903772234917,
+    "adv_step_mean": 0.7282734429463744,
+    "adv_step_max": 1.9301314111799002,
+    "adv_endpoint_disp": 34.46672344207764
+  },
+  {
+    "mode": "collision_s1.0",
+    "prob_mean": 0.19321144931018353,
+    "prob_min": 0.07757047563791275,
+    "prob_max": 0.6233090758323669,
+    "ego_step_mean": 1.2736366791650653,
+    "ego_step_max": 2.613323651254177,
+    "ego_endpoint_disp": 61.048730075359344,
+    "adv_step_mean": 0.7387715354561806,
+    "adv_step_max": 1.9290433265268803,
+    "adv_endpoint_disp": 35.035513401031494
+  },
+  {
+    "mode": "collision_s2.0",
+    "prob_mean": 0.21221639635041356,
+    "prob_min": 0.07805339992046356,
+    "prob_max": 0.6428013443946838,
+    "ego_step_mean": 1.2512644305825233,
+    "ego_step_max": 2.564972570165992,
+    "ego_endpoint_disp": 59.624500423669815,
+    "adv_step_mean": 0.7473552199080586,
+    "adv_step_max": 1.9283620603382587,
+    "adv_endpoint_disp": 35.513995945453644
+  },
+  {
+    "mode": "collision_s3.0",
+    "prob_mean": 0.2367060831747949,
+    "prob_min": 0.07813531160354614,
+    "prob_max": 0.6678411960601807,
+    "ego_step_mean": 1.2269313568249345,
+    "ego_step_max": 2.5131594371050596,
+    "ego_endpoint_disp": 58.30049675703049,
+    "adv_step_mean": 0.7554966090247035,
+    "adv_step_max": 1.9209516178816557,
+    "adv_endpoint_disp": 35.96429634094238
+  }
+]

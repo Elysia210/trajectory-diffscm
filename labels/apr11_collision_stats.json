@@ -1,0 +1,12 @@
+{
+  "files_scanned": 189,
+  "scenes_labeled_collision": 2203,
+  "scenes_labeled_noncollision": 12435,
+  "scenes_processed": 14638,
+  "scenes_seen": 14638,
+  "skipped_bad_shapes": 0,
+  "skipped_bad_values": 0,
+  "skipped_invalid_ctrl": 0,
+  "skipped_missing_fields": 0,
+  "skipped_out_of_range": 0
+}

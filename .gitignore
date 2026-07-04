@@ -127,3 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Project datasets and large artifacts (not needed for code review)
+data/
+*.npz
+*.pt
+*.pth
+*.ckpt
+*.gz
+*.tar.zst
+# keep code / reports / small tables; drop bulky sample outputs
+results/**/raw_npz/

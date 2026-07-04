@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trajectory Diff-SCM — Apr11 Rerun & Physical Constraints</title>
+<style>
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1a1a1a; line-height: 1.55;
+         max-width: 820px; margin: 40px auto; padding: 0 24px; }
+  h1 { font-size: 24px; border-bottom: 3px solid #2E5C8A; padding-bottom: 8px; }
+  h2 { font-size: 18px; color: #2E5C8A; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+  h3 { font-size: 15px; color: #333; margin-top: 18px; }
+  .meta { color: #666; font-size: 13px; margin-top: -6px; }
+  .summary { background: #f4f8fc; border-left: 4px solid #2E5C8A; padding: 12px 16px; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; }
+  th, td { border: 1px solid #cfd8e3; padding: 6px 10px; text-align: right; }
+  th { background: #e8f0f8; text-align: center; }
+  td:first-child, th:first-child { text-align: left; }
+  .best { background: #e8f7ee; font-weight: 600; }
+  .bad { background: #fdecea; }
+  code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 12.5px; }
+  .note { color: #555; font-size: 13px; }
+  ul { margin: 6px 0; }
+  @media print { body { margin: 0; max-width: 100%; } h2 { page-break-after: avoid; } table { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<h1>Trajectory Diff-SCM — Apr11 Rerun &amp; Physical Constraints</h1>
+<p class="meta">Experiment report &middot; June 2026 &middot; Ruimin Zhang</p>
+
+<div class="summary">
+<strong>Summary.</strong> The trajectory Diff-SCM baseline was rerun end-to-end on the
+updated Apr11 dataset, and physical constraints were added both at sampling time and in
+training. The recommended setup &mdash; the acceleration-regularized diffusion model with
+sampling-side guidance <code>guidance_scale=5, lambda_step=2, lambda_accel=10</code> &mdash;
+produces a strong counterfactual collision push (mean collision-probability increase
+&asymp; 0.29) while keeping motion close to physically feasible (≈ 12% of steps above the
+8&nbsp;m/s² cap, versus ≈ 50% for the original unguided model). A key diagnostic finding:
+the unguided diffusion model itself produced infeasible accelerations, so the durable fix
+had to be in training, not only in sampling.
+</div>
+
+<h2>Task</h2>
+<p>The request was to (1) rerun Diff-SCM on the updated trajectory data and (2) add physical
+constraints during sampling if possible. Both are addressed; (2) was extended to a
+training-side fix after a diagnostic finding.</p>
+
+<h2>1. Data integration (Apr11)</h2>
+<p>All <strong>14,638</strong> ego/adversary pair-scenes from the 189-file export load
+correctly with <strong>zero skipped</strong> (schema and 100-step length match; per-sample
+feature tensor <code>[100, 23]</code>). No config change beyond the data path was needed.</p>
+<p>The export carries no collision labels, so binary labels were generated geometrically
+(rotated bounding-box overlap via the Separating-Axis Theorem): 2,203 collision /
+12,435 non-collision. A labeling pitfall was caught and fixed: scene keys repeat across
+files (14,638 rows vs only 4,841 unique keys), so the label manifest was rekeyed by the
+globally unique <code>source_file:scene_key</code>, after which all 14,638 scenes matched
+their own label.</p>
+
+<h2>2. Pipeline fixes</h2>
+<p><strong>Classifier input normalization.</strong> The classifier initially did not learn
+(validation PR-AUC stuck at chance) because it consumed raw features whose world-coordinate
+positions (hundreds&ndash;thousands of metres) saturated the GRU. Per-feature standardization
+(stored as model buffers, so the sampler self-normalizes too) fixed it: validation PR-AUC
+0.99, F1 0.97. The step-diffusion model trained cleanly (validation loss &rarr; 0.052).</p>
+
+<h2>3. Physical constraints added</h2>
+<ul>
+<li><strong>Feature recomputation (sampling).</strong> After a position intervention, heading,
+velocity, and relative-motion features are recomputed from the generated positions so the
+classifier scores a self-consistent trajectory (previously they were stale).</li>
+<li><strong>Acceleration hinge (sampling).</strong> A feasibility cap penalizing only
+acceleration above a threshold (default 8&nbsp;m/s²), rather than forcing the trajectory to copy
+the reference.</li>
+<li><strong>Acceleration regularizer (training).</strong> A smoothness/acceleration penalty on
+the model&rsquo;s predicted step sequence, applied only in the low-noise regime (see §5).</li>
+</ul>
+
+<h2>4. Sampling-side results</h2>
+<p><code>guidance_scale</code> controls collision promotion; <code>lambda_step</code> trades it
+for closeness to the factual rollout (best first stage: gs=5, lambda_step=2). The
+acceleration sweep (gs=5, lambda_step=2) on the original model:</p>
+<table>
+<tr><th>lambda_accel</th><th>&Delta; collision prob</th><th>adv drift (m)</th><th>peak accel (m/s²)</th><th>frac. steps &gt; 8 m/s²</th></tr>
+<tr><td>0</td><td>0.451</td><td>26.8</td><td>2138</td><td>0.74</td></tr>
+<tr><td>2</td><td>0.314</td><td>17.3</td><td>421</td><td>0.41</td></tr>
+<tr><td>5</td><td>0.300</td><td>12.4</td><td>19.3</td><td>0.20</td></tr>
+<tr class="best"><td>10</td><td>0.311</td><td>12.3</td><td>13.5</td><td>0.16</td></tr>
+<tr><td>20</td><td>0.328</td><td>14.1</td><td>11.3</td><td>0.10</td></tr>
+<tr class="bad"><td><em>unguided reference</em></td><td>&mdash;</td><td>&mdash;</td><td><em>223.6</em></td><td><em>0.496</em></td></tr>
+</table>
+<p class="note">The hinge is effective beyond lambda_accel ≈ 5, reduces the adversary drift
+(which <code>lambda_step</code> alone could not), and barely costs collision push.</p>
+
+<h2>5. Key finding &mdash; the model itself is the bottleneck</h2>
+<p>The unguided reference itself is infeasible (≈ 224&nbsp;m/s² peak, ≈ 50% of steps over the
+cap). Sampling constraints clean up the guided output, but the realism ceiling is set by the
+diffusion model, which was trained without any smoothness regularization. This motivated a
+training-side fix.</p>
+
+<h2>6. Training-side regularization (root-cause fix)</h2>
+<p>A first naive attempt (regularizing all timesteps, weight 1.0) backfired: at high diffusion
+noise the predicted clean sample is essentially noise with huge meaningless acceleration, so
+the term dominated training, wrecked fidelity (val 0.21 vs 0.052), and made the model&rsquo;s
+own samples <em>worse</em>. Restricting the regularizer to the low-noise regime (timesteps
+≤ 20% of the schedule) fixed this:</p>
+<table>
+<tr><th>diffusion model</th><th>val loss (fidelity)</th><th>reference frac. &gt; 8 m/s²</th><th>reference peak</th><th>collision push &Delta;</th></tr>
+<tr><td>baseline</td><td>0.052</td><td>0.496</td><td>223.6</td><td>0.451</td></tr>
+<tr class="bad"><td>naive reg (failed)</td><td>0.210</td><td>0.994</td><td>147.6</td><td>0.245</td></tr>
+<tr class="best"><td>low-noise reg</td><td>0.054</td><td>0.310</td><td>153.8</td><td>0.443</td></tr>
+</table>
+<p>The regularized model preserves fidelity and counterfactual push while making its
+<strong>own unguided samples</strong> substantially more feasible (over-threshold fraction
+0.50 &rarr; 0.31).</p>
+
+<h2>7. Combined (recommended) configuration</h2>
+<p>Regularized model + sampling hinge (lambda_accel=10): guided over-threshold fraction
+<strong>0.12</strong> (vs 0.16 on the un-regularized model) at a collision-probability
+increase of <strong>0.29</strong>. The two mechanisms are complementary &mdash; training
+lowers the model&rsquo;s intrinsic infeasibility, sampling enforces a per-sample physical cap.</p>
+
+<h2>8. Conclusions</h2>
+<ul>
+<li>The new Apr11 data is fully integrated and the end-to-end Diff-SCM pipeline runs on it.</li>
+<li>Physical constraints work at two levels: a sampling-side acceleration cap, and a
+training-side regularizer that makes the model&rsquo;s own prior more feasible &mdash; without
+hurting denoising fidelity or counterfactual push.</li>
+<li>The recommended setup gives a strong, controllable counterfactual collision push with
+roughly four-fold fewer physically-infeasible steps than the original baseline.</li>
+<li>Methodological takeaway worth keeping: a regularizer on the predicted clean sample must be
+gated to the low-noise regime, or it competes with &mdash; and loses to &mdash; the denoising
+objective.</li>
+</ul>
+
+<h2>9. Next steps</h2>
+<ul>
+<li>Push the training regularizer slightly harder (fidelity has slack to ≈ 0.08) to lower the
+model&rsquo;s intrinsic infeasibility further.</li>
+<li>The trajectory version currently starts from random noise rather than inverting a real
+future (no Abduction step), so it is &ldquo;Diff-SCM-inspired&rdquo; rather than a strict
+counterfactual. Implementing trajectory DDIM inversion is the natural way to make it a true
+counterfactual &mdash; a good topic for the next meeting.</li>
+</ul>
+
+</body>
+</html>

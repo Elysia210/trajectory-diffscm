@@ -162,10 +162,14 @@ class TensorBoardOutputFormat(KVWriter):
         self.step = 1
 
     def writekvs(self, kvs):
-        for k, v in kvs.items():
+        # Some training loops log "epoch" instead of "step". Avoid indexing a
+        # defaultdict with kvs["step"], because that mutates the dict while we
+        # are iterating over it.
+        global_step = kvs.get("step", self.step)
+        for k, v in list(kvs.items()):
             if k != "step":
                 k = k.replace("_", "/")
-                self.writer.add_scalar(k, v, global_step=kvs["step"])
+                self.writer.add_scalar(k, v, global_step=global_step)
         self.writer.flush()
         self.step += 1
 

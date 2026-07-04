@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>DiffSCM — Apr11 重跑 + 物理约束</title>
+<style>
+  body { font-family: Calibri,"Segoe UI","Microsoft YaHei",sans-serif; color:#000;
+         line-height:1.55; max-width:760px; margin:36px auto; padding:0 22px; }
+  h1 { font-size:19px; font-weight:bold; border-bottom:1px solid #000; padding-bottom:5px; }
+  h2 { font-size:14.5px; font-weight:bold; margin-top:22px; }
+  p { font-size:13.5px; }
+  table { border-collapse:collapse; width:100%; margin:10px 0; font-size:13px; }
+  th,td { border:1px solid #8a8a8a; padding:5px 9px; text-align:right; }
+  th { background:#efefef; text-align:center; font-weight:bold; }
+  td:first-child, th:first-child { text-align:left; }
+  tr.rec td { font-weight:bold; }
+  img { width:100%; border:1px solid #c8c8c8; margin:6px 0; }
+  .cap { font-size:12px; color:#444; margin:0 0 14px; }
+  code { font-family: Consolas,monospace; font-size:12px; }
+  @media print { body { margin:0; } }
+</style>
+</head>
+<body>
+
+<h1>DiffSCM — Apr11 重跑 + 物理约束（结果简报）</h1>
+<p>把 DiffSCM 用 Apr11 的新数据重跑了一遍，189 个文件、14638 个场景都能正常读进来，分类器、扩散、
+guided 采样整条都通了。然后在采样和训练两个地方都试着加了物理约束，效果确实有改善。下面的结果都是
+<code>guidance_scale=5, lambda_step=2</code> 跑的，dt=0.1s，加速度上限取 8&nbsp;m/s²。</p>
+
+<h2>① 采样侧加速度约束（原模型）</h2>
+<table>
+<tr><th>lambda_accel</th><th>Δ碰撞概率</th><th>对手车终点漂移(m)</th><th>峰值加速度(m/s²)</th><th>超标步占比</th></tr>
+<tr><td>0（关）</td><td>0.451</td><td>26.8</td><td>2138</td><td>74%</td></tr>
+<tr><td>5</td><td>0.300</td><td>12.4</td><td>19.3</td><td>20%</td></tr>
+<tr class="rec"><td>10（推荐）</td><td>0.311</td><td>12.3</td><td>13.5</td><td>16%</td></tr>
+<tr><td>20</td><td>0.328</td><td>14.1</td><td>11.3</td><td>10%</td></tr>
+</table>
+<p class="cap">加了加速度上限之后，超过物理上限的步从 74% 掉到 16%，而碰撞概率的提升基本没受影响。</p>
+
+<img src="trajectory_step/preservation/viz_compare/acceleration_compare.png"
+     alt="acceleration without vs with constraint">
+<p class="cap">左边没加约束，加速度能冲到 2000 多，八成的步都超标；右边加了之后基本就贴着 8 这条线走了
+（这张只看了碰撞推得最猛的几个场景，所以右边占比比整体的 16% 高一些）。</p>
+
+<h2>② 训练侧加速度正则（模型自身无引导采样）</h2>
+<table>
+<tr><th>扩散模型</th><th>val loss(保真)</th><th>reference 超标步</th><th>峰值(m/s²)</th><th>Δ碰撞概率</th></tr>
+<tr><td>baseline</td><td>0.052</td><td>50%</td><td>224</td><td>0.451</td></tr>
+<tr><td>naive 正则(失败)</td><td>0.210</td><td>99%</td><td>148</td><td>0.245</td></tr>
+<tr class="rec"><td>低噪声正则</td><td>0.054</td><td>31%</td><td>154</td><td>0.443</td></tr>
+</table>
+<p class="cap">正则只在低噪声那段加。一开始全程加翻车了：高噪声时模型对干净样本的估计本来就乱，硬压加速度
+反而把去噪能力搞坏，模型自己采出来更抖（超标率冲到 99%）。改成只在低噪声步加之后，模型自身的超标率
+从 50% 降到 31%，保真度（val loss）也没掉。</p>
+
+<h2>③ 反事实碰撞示例（推荐配置：低噪声正则模型 + lambda_accel=10）</h2>
+<img src="trajectory_step/preservation/accel_train_mask/viz/trajectories.png"
+     alt="counterfactual trajectories">
+<p class="cap">蓝色是 ego，红色是对手车；虚线是没引导的 factual，实线是 guided 反事实；绿圈是两车最近的地方。
+标题里写的是碰撞概率从 ref 到 guided 的变化，可以看到不少场景从差不多 0 被推到了 1。</p>
+
+<h2>小结</h2>
+<p>采样和训练两边加约束都让轨迹更靠谱了，碰撞该推上去还是能推上去。现在用得最顺的是正则模型配上采样
+上限 λ=10 这一套，guided 的超标步大概 12%，碰撞概率平均还能提 0.29 左右。下一步可以把训练侧的正则
+再加重点试试，看模型自身能不能更可行。</p>
+
+</body>
+</html>
