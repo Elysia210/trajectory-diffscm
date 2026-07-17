@@ -1,0 +1,36 @@
+{
+  "factor_defs": {
+    "collision": "binary collision label (geometric SAT overlap)",
+    "collision_timestep": "first collision timestep, -1 if none",
+    "min_distance": "min ego-adversary distance over the scene",
+    "init_distance": "ego-adversary distance at t=0",
+    "closing": "init_distance - min_distance (how much they closed)",
+    "ego_speed_mean": "mean ego speed",
+    "adv_speed_mean": "mean adversary speed",
+    "rel_speed_mean": "mean relative speed",
+    "ego_max_accel": "max ego acceleration magnitude (m/s^2)",
+    "adv_max_accel": "max adversary acceleration magnitude (m/s^2)",
+    "ego_max_turn": "max ego per-step turn angle (rad)",
+    "adv_max_turn": "max adversary per-step turn angle (rad)",
+    "ego_path_len": "ego path length",
+    "adv_path_len": "adversary path length"
+  },
+  "n_samples": 14638,
+  "dag_note": "dag[i,j]=1 means factor i -> factor j. All zeros now; fill from Baohua's initial causal graph (or drop unused factors).",
+  "dag_order": [
+    "collision",
+    "collision_timestep",
+    "min_distance",
+    "init_distance",
+    "closing",
+    "ego_speed_mean",
+    "adv_speed_mean",
+    "rel_speed_mean",
+    "ego_max_accel",
+    "adv_max_accel",
+    "ego_max_turn",
+    "adv_max_turn",
+    "ego_path_len",
+    "adv_path_len"
+  ]
+}

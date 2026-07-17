@@ -138,3 +138,4 @@ data/
 *.tar.zst
 # keep code / reports / small tables; drop bulky sample outputs
 results/**/raw_npz/
+reference/
